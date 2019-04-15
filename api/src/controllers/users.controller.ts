@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Post,
-  Patch,
+  Put,
   Param,
   Req,
   Delete,
@@ -22,13 +22,20 @@ export class UsersController {
     return await this.usersService.findAll();
   }
 
+  @Post('/message')
+  async sendMessage(@Req() req, @Res() res) {
+    await this.usersService.sendMessage(req.body);
+    res.status(HttpStatus.OK).json();
+  }
+  
+
   @UseInterceptors(ClassSerializerInterceptor)
   @Get(':id')
   async find(@Param() params) {
     return await this.usersService.find(params.id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   async update(@Req() req, @Param() params) {
     return await this.usersService.update(params.id, req.body);
   }

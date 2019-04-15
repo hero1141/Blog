@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { sign } from 'jsonwebtoken';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHmac } from 'crypto';
@@ -10,6 +10,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @Inject('MailerProvider') private readonly mailerProvider,
   ) {}
 
   /**
@@ -52,8 +53,6 @@ export class UsersService {
    */
   async findAll(): Promise<User[]> {
     return await this.userRepository.find({
-      select: ['firstName', 'lastName', 'email', 'company', 'role'],
-      relations: ['role', 'company'],
     });
   }
 
@@ -64,7 +63,6 @@ export class UsersService {
    */
   async find(id: number): Promise<User> {
     return await this.userRepository.findOne(id, {
-      relations: ['role', 'company'],
     });
   }
 
@@ -88,7 +86,6 @@ export class UsersService {
     user.lastName = userData.lastName;
     user.email = userData.email;
     user.password = UsersService.saltHashPassword(userData.password);
-    user.role = userData.roleId;
     return await this.userRepository.save(user);
   }
 
@@ -102,6 +99,24 @@ export class UsersService {
     const user = await this.find(id);
     const updated = Object.assign(user, userData);
     return await this.userRepository.save(updated);
+  }
+
+  async sendMessage(body): Promise<any> {
+    console.log(body);
+    const user = await this.find(body.user);
+
+    console.log(body, user);
+    await this.mailerProvider.sendMail({
+      to: user.email,
+      from: body.email,
+      subject: 'Message from blog',
+      template: 'contact',
+      context: {
+        body: body.message,
+        email: body.email
+      },
+    });
+    return 1;  
   }
 
   /**

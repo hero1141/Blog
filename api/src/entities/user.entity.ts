@@ -22,8 +22,14 @@ export class User {
   @Column('text')
   email: string;
 
+  @Column('text', { nullable: true })
+  description: string;
+
   @Exclude()
   @Column('text')
   password: string;
+
+  @Column('text', { nullable: true })
+  avatar: string;
 
 }
